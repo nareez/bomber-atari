@@ -1,10 +1,9 @@
 	processor 6502
         include "vcs.h"
         include "macro.h"
-        include "xmacro.h"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Variables segment
+; Váriaveis
 
         seg.u Variables
 	org $80
@@ -17,6 +16,7 @@ JetSpritePtr	word
 JetColorPtr	word
 BomberSpritePtr word
 BomberColorPtr	word
+JetAnimOffset   byte 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Constantes
@@ -83,10 +83,19 @@ StartFrame:
         sta HMOVE
 
 ; 1 + 3 lines of VSYNC
-	VERTICAL_SYNC
+	lda #2
+        sta VBLANK               ; turn on VBLANK
+        sta VSYNC                ; turn on VSYNC
+        REPEAT 3
+            sta WSYNC            ; display 3 recommended lines of VSYNC
+        REPEND
+        lda #0
+    	sta VSYNC                ; turn off VSYNC
 ; 37 lines of underscan
-	TIMER_SETUP 37
-        TIMER_WAIT
+	REPEAT 37
+        sta WSYNC            ; display the 37 recommended lines of VBLANK
+        REPEND
+        sta VBLANK               ; turn off VBLANK
 
 
 GameVisibleLine:
@@ -118,6 +127,9 @@ GameVisibleLine:
         lda #0
 
 .DrawSpriteP0:
+	clc
+	adc JetAnimOffset	;pular para o frame correto para gerar uma animacao de curva
+        
 	tay
         lda (JetSpritePtr),Y
         sta WSYNC
@@ -148,9 +160,17 @@ GameVisibleLine:
         dex
         bne .GameLineLoop
         
-; 29 lines of overscan
-	TIMER_SETUP 30
-        TIMER_WAIT
+	lda #0
+        sta JetAnimOffset
+        
+; 29 linhas do overscan
+        lda #2
+        sta VBLANK               ; turn on VBLANK again
+        REPEAT 30
+            sta WSYNC            ; display 30 recommended lines of VBlank Overscan
+        REPEND
+        lda #0
+        sta VBLANK               ; turn off VBLANK
 
 ; Joystick
 CheckP0up:
@@ -158,28 +178,48 @@ CheckP0up:
         bit SWCHA
         bne CheckP0Down
         inc JetYPos
+        lda #0
+        sta JetAnimOffset
         
 CheckP0Down:
 	lda #%00100000
         bit SWCHA
         bne CheckP0Left
         dec JetYPos
+        lda #0
+        sta JetAnimOffset
 
 CheckP0Left:
 	lda #%01000000
         bit SWCHA
         bne CheckP0Right
         dec JetXPos
+        lda JET_HEIGHT
+        sta JetAnimOffset
 
 CheckP0Right:
 	lda #%10000000
         bit SWCHA
         bne EndInputCheck
         inc JetXPos
+        lda JET_HEIGHT
+        sta JetAnimOffset
         
 EndInputCheck:
 
+; Atualizar posićões para o próximo frame
+UpdateBomberPosition:
+	lda BomberYPos
+        clc
+        cmp #0
+        bmi .ResetBomberPosition
+        dec BomberYPos
+        jmp EndPositionUpdate
+.ResetBomberPosition
+	lda #96
+        sta BomberYPos
 
+EndPositionUpdate:
 ;loopback
         jmp StartFrame
 
