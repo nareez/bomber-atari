@@ -38,7 +38,7 @@ Reset:
 
 	lda #10
         sta JetYPos
-	lda #60
+	lda #0
         sta JetXPos
         
         lda #83
@@ -69,6 +69,19 @@ Reset:
         sta BomberColorPtr+1
 
 StartFrame:
+
+; Pré-VBLANK processing
+	lda JetXPos
+        ldy #0
+        jsr SetObjectXPos
+        
+        lda BomberXPos
+        ldy #1
+        jsr SetObjectXPos
+        
+        sta WSYNC
+        sta HMOVE
+
 ; 1 + 3 lines of VSYNC
 	VERTICAL_SYNC
 ; 37 lines of underscan
@@ -138,9 +151,58 @@ GameVisibleLine:
 ; 29 lines of overscan
 	TIMER_SETUP 30
         TIMER_WAIT
-; total = 262 lines, go to next frame
+
+; Joystick
+CheckP0up:
+	lda #%00010000
+        bit SWCHA
+        bne CheckP0Down
+        inc JetYPos
+        
+CheckP0Down:
+	lda #%00100000
+        bit SWCHA
+        bne CheckP0Left
+        dec JetYPos
+
+CheckP0Left:
+	lda #%01000000
+        bit SWCHA
+        bne CheckP0Right
+        dec JetXPos
+
+CheckP0Right:
+	lda #%10000000
+        bit SWCHA
+        bne EndInputCheck
+        inc JetXPos
+        
+EndInputCheck:
+
+
+;loopback
         jmp StartFrame
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Subroutine to handle object horizontal position with fine offset
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; A is the target x-coordinate position in pixels of our object
+;; Y is the object type (0:player0, 1:player1, 2:missile0, 3:missile1, 4:ball)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SetObjectXPos subroutine
+    sta WSYNC                ; start a fresh new scanline
+    sec                      ; make sure carry-flag is set before subtracion
+.Div15Loop
+    sbc #15                  ; subtract 15 from accumulator
+    bcs .Div15Loop           ; loop until carry-flag is clear
+    eor #7                   ; handle offset range from -8 to 7
+    asl
+    asl
+    asl
+    asl                      ; four shift lefts to get only the top 4 bits
+    sta HMP0,Y               ; store the fine offset to the correct HMxx
+    sta RESP0,Y              ; fix object position in 15-step increment
+    rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Declare ROM lookup tables
