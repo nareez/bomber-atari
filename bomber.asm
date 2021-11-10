@@ -16,7 +16,8 @@ JetSpritePtr	word
 JetColorPtr	word
 BomberSpritePtr word
 BomberColorPtr	word
-JetAnimOffset   byte 
+JetAnimOffset   byte
+Random		byte
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Constantes
@@ -218,6 +219,8 @@ UpdateBomberPosition:
 .ResetBomberPosition
 	lda #96
         sta BomberYPos
+        
+        jsr GetRandomBomberPos	; pegar uma posicao aleatoria para o bomber
 
 EndPositionUpdate:
 ;loopback
@@ -230,19 +233,39 @@ EndPositionUpdate:
 ;; Y is the object type (0:player0, 1:player1, 2:missile0, 3:missile1, 4:ball)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 SetObjectXPos subroutine
-    sta WSYNC                ; start a fresh new scanline
-    sec                      ; make sure carry-flag is set before subtracion
+        sta WSYNC                ; start a fresh new scanline
+        sec                      ; make sure carry-flag is set before subtracion
 .Div15Loop
-    sbc #15                  ; subtract 15 from accumulator
-    bcs .Div15Loop           ; loop until carry-flag is clear
-    eor #7                   ; handle offset range from -8 to 7
-    asl
-    asl
-    asl
-    asl                      ; four shift lefts to get only the top 4 bits
-    sta HMP0,Y               ; store the fine offset to the correct HMxx
-    sta RESP0,Y              ; fix object position in 15-step increment
-    rts
+        sbc #15                  ; subtract 15 from accumulator
+        bcs .Div15Loop           ; loop until carry-flag is clear
+        eor #7                   ; handle offset range from -8 to 7
+        asl
+        asl
+        asl
+        asl                      ; four shift lefts to get only the top 4 bits
+        sta HMP0,Y               ; store the fine offset to the correct HMxx
+        sta RESP0,Y              ; fix object position in 15-step increment
+        rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Subrotina para gerar um numero aleatorio
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; dividir por 4 e adicionar 30 para caber dentro do Rio no mapa
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+GetRandomBomberPos subroutine
+	lda Random
+        asl
+        eor Random
+        asl
+        eor Random
+        asl
+        asl
+        eor Random
+        asl
+        rol Random
+        
+        lsr		; Divide por 2
+        lsr		; Divide por 2 totalizando divisão por 4
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Declare ROM lookup tables
