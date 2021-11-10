@@ -47,6 +47,9 @@ Reset:
         lda #54
         sta BomberXPos
         
+        lda #%11010100
+        sta Random
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Inicializar ponteiros
 	lda #<JetSprite
@@ -217,9 +220,6 @@ UpdateBomberPosition:
         dec BomberYPos
         jmp EndPositionUpdate
 .ResetBomberPosition
-	lda #96
-        sta BomberYPos
-        
         jsr GetRandomBomberPos	; pegar uma posicao aleatoria para o bomber
 
 EndPositionUpdate:
@@ -266,6 +266,14 @@ GetRandomBomberPos subroutine
         
         lsr		; Divide por 2
         lsr		; Divide por 2 totalizando divisão por 4
+        sta BomberXPos
+        lda #30
+        adc BomberXPos
+        sta BomberXPos
+        
+        lda #96
+        sta BomberYPos
+        rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Declare ROM lookup tables
