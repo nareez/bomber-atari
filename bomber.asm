@@ -101,6 +101,18 @@ StartFrame:
         REPEND
         sta VBLANK               ; turn off VBLANK
 
+; Scoreboard
+	lda #0
+        sta PF0
+        sta PF1
+        sta PF2
+        sta GRP0
+        sta GRP1
+        sta COLUPF
+        REPEAT 20
+        	sta WSYNC
+        REPEND
+        
 
 GameVisibleLine:
 ; 96 visible lines of frame porque vamos usar 2 lines kernel
@@ -119,7 +131,7 @@ GameVisibleLine:
         lda #0
         sta PF2
         
-        ldx #96	; conta as scanlines remanecentes
+        ldx #84	; conta as scanlines remanecentes
         
 .GameLineLoop:
 .AreWeInsideJetSprite:
@@ -223,7 +235,32 @@ UpdateBomberPosition:
         jsr GetRandomBomberPos	; pegar uma posicao aleatoria para o bomber
 
 EndPositionUpdate:
-;loopback
+
+; Check Colisões
+CheckCollisionP0P1:
+	lda #%10000000		;CXPPMM bit 7 detecta colisao do P0 com P1
+        bit CXPPMM		;Checa o registrador CXPPMM teve a colisão acima
+        bne .CollisionP0P1	;Se colidir vai para o tratamento da colisão
+        jmp CheckCollisionP0PF
+.CollisionP0P1:
+	jsr GameOver
+
+CheckCollisionP0PF:
+	lda #%10000000		; CXP0FB detecta colisao do P0 com PF
+	bit CXP0FB
+        bne .CollisionP0PF
+        jmp EndCollisionCheck	
+        
+.CollisionP0PF:
+	jsr GameOver
+        
+EndCollisionCheck:   
+	sta CXCLR
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Loopback to new frame
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
         jmp StartFrame
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -245,6 +282,14 @@ SetObjectXPos subroutine
         asl                      ; four shift lefts to get only the top 4 bits
         sta HMP0,Y               ; store the fine offset to the correct HMxx
         sta RESP0,Y              ; fix object position in 15-step increment
+        rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; GameOver
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+GameOver subroutine
+	lda #$30
+        sta COLUBK
         rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
