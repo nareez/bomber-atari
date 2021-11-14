@@ -25,7 +25,8 @@ JetAnimOffset   byte
 Random		byte
 ScoreSprite	byte
 TimerSprite	byte
-
+TerrainColor	byte
+RiverColor	byte
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Constantes
@@ -119,16 +120,18 @@ StartFrame:
         sta VBLANK               ; turn off VBLANK
 
 ; Scoreboard
+    
         lda #0
         sta PF0
         sta PF1
         sta PF2
         sta GRP0
         sta GRP1
+        sta CTRLPF
 	sta COLUBK
-                
+         
         lda #$1E
-        sta COLUPF
+        sta COLUPF              
         
         ldx DIGITS_HEIGHT
         
@@ -189,11 +192,12 @@ StartFrame:
         sta WSYNC
 
 GameVisibleLine:
-; 96 visible lines of frame porque vamos usar 2 lines kernel
-	lda #$84
-        sta COLUBK	;SET BACKGROUND
-        lda #$C2
-        sta COLUPF	; cor do playfield
+	lda TerrainColor
+        sta COLUPF
+        
+        lda RiverColor
+        sta COLUBK
+        
         lda #%00000001
         sta CTRLPF	; refletir o playfield
         
@@ -205,7 +209,7 @@ GameVisibleLine:
         lda #0
         sta PF2
         
-        ldx #85	; conta as scanlines remanecentes
+        ldx #85          ; conta as scanlines remanecentes
         
 .GameLineLoop:
 .AreWeInsideJetSprite:
@@ -306,6 +310,7 @@ UpdateBomberPosition:
         dec BomberYPos
         jmp EndPositionUpdate
 .ResetBomberPosition
+        inc Score
         jsr GetRandomBomberPos	; pegar uma posicao aleatoria para o bomber
 
 EndPositionUpdate:
@@ -314,19 +319,12 @@ EndPositionUpdate:
 CheckCollisionP0P1:
 	lda #%10000000		;CXPPMM bit 7 detecta colisao do P0 com P1
         bit CXPPMM		;Checa o registrador CXPPMM teve a colisão acima
-        bne .CollisionP0P1	;Se colidir vai para o tratamento da colisão
-        jmp CheckCollisionP0PF
-.CollisionP0P1:
+        bne .P0P1Collided	;Se colidir vai para o tratamento da colisão
+        jsr SetTerrainRiverColor
+        jmp EndCollisionCheck
+.P0P1Collided:
 	jsr GameOver
 
-CheckCollisionP0PF:
-	lda #%10000000		; CXP0FB detecta colisao do P0 com PF
-	bit CXP0FB
-        bne .CollisionP0PF
-        jmp EndCollisionCheck	
-        
-.CollisionP0PF:
-	jsr GameOver
         
 EndCollisionCheck:   
 	sta CXCLR
@@ -336,6 +334,14 @@ EndCollisionCheck:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
         jmp StartFrame
+
+
+SetTerrainRiverColor subroutine
+	lda #$C2
+        sta TerrainColor
+        lda #$84
+        sta RiverColor
+        rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Subroutine to handle object horizontal position with fine offset
@@ -363,7 +369,10 @@ SetObjectXPos subroutine
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 GameOver subroutine
 	lda #$30
-        sta COLUBK
+        sta TerrainColor
+        sta RiverColor
+        lda #$0
+        sta Score
         rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
