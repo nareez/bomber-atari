@@ -363,12 +363,8 @@ UpdateBomberPosition:
 .ResetBomberPosition
         jsr GetRandomBomberPos	; pegar uma posicao aleatoria para o bomber
         
-.SetScoreValues        
+.SetTimerValues        
         sed
-	lda Score
-        clc
-        adc #1
-        sta Score
         lda Timer
         clc
         adc #1
@@ -383,10 +379,24 @@ CheckCollisionP0P1:
         bit CXPPMM		;Checa o registrador CXPPMM teve a colisão acima
         bne .P0P1Collided	;Se colidir vai para o tratamento da colisão
         jsr SetTerrainRiverColor
-        jmp EndCollisionCheck
+        jmp CheckCollisionM0P1
 .P0P1Collided:
 	jsr GameOver
 
+CheckCollisionM0P1:
+	lda #%10000000
+        bit CXM0P
+        bne .M0P1Collided
+        jmp EndCollisionCheck
+.M0P1Collided:
+	sed
+        lda Score
+	clc
+        adc #1
+        sta Score
+        cld
+        lda #0
+        sta MissileYPos        
         
 EndCollisionCheck:   
 	sta CXCLR
