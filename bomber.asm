@@ -12,6 +12,8 @@ JetXPos		byte
 JetYPos		byte
 BomberXPos	byte
 BomberYPos	byte
+MissileXPos	byte
+MissileYPos	byte
 Score		byte	;2 digit score
 Timer		byte	;2 digit timer
 Temp		byte 	; variavel auxiliar para calcular o score e timer
@@ -28,10 +30,15 @@ TimerSprite	byte
 TerrainColor	byte
 RiverColor	byte
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Constantes
 
 JET_HEIGHT = 9
+JET_TOP_LIMIT = 75
+JET_BOT_LIMIT = 3
+JET_LEF_LIMIT = 101
+JET_RIG_LIMIT = 31
 BOMBER_HEIGHT = 9
 DIGITS_HEIGHT = 5
 
@@ -63,7 +70,7 @@ Reset:
         lda #0
         sta Score
         sta Timer
-        
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Inicializar ponteiros
 	lda #<JetSprite
@@ -111,17 +118,18 @@ StartFrame:
         ldy #1
         jsr SetObjectXPos
         
+        lda MissileXPos
+        ldy #2
+        jsr SetObjectXPos
+        
         jsr CalculateDigitOffset ; calcula o offset do digito
         
         sta WSYNC
-        sta HMOVE    
-        
-        lda #0
-        sta VBLANK               ; turn off VBLANK
+        sta HMOVE
 
 ; Scoreboard
     
-        lda #0
+        ;lda #0
         sta PF0
         sta PF1
         sta PF2
@@ -134,6 +142,10 @@ StartFrame:
         sta COLUPF              
         
         ldx DIGITS_HEIGHT
+        
+        lda #0
+        sta VBLANK               ; turn off VBLANK
+        
         
 .ScoreDigitLoop:
 ; Score
@@ -212,6 +224,15 @@ GameVisibleLine:
         ldx #85          ; conta as scanlines remanecentes
         
 .GameLineLoop:
+	lda #%00000000
+        cpx MissileYPos
+        bne .SkipMissileDraw
+.MissileDraw:
+	lda #%00000010
+        inc MissileYPos
+.SkipMissileDraw:
+	sta ENAM0
+
 .AreWeInsideJetSprite:
 	txa
         sec
@@ -271,6 +292,10 @@ CheckP0up:
 	lda #%00010000
         bit SWCHA
         bne CheckP0Down
+        lda #JET_TOP_LIMIT
+        cmp JetYPos
+        bmi CheckP0Down
+.P0UpPressed:
         inc JetYPos
         lda #0
         sta JetAnimOffset
@@ -279,6 +304,10 @@ CheckP0Down:
 	lda #%00100000
         bit SWCHA
         bne CheckP0Left
+	lda #JET_BOT_LIMIT
+        cmp JetYPos
+        bpl CheckP0Left
+.P0DownPressed:
         dec JetYPos
         lda #0
         sta JetAnimOffset
@@ -287,6 +316,10 @@ CheckP0Left:
 	lda #%01000000
         bit SWCHA
         bne CheckP0Right
+        lda #JET_RIG_LIMIT
+        cmp JetXPos
+        bpl CheckP0Right
+.P0LeftPressed:
         dec JetXPos
         lda JET_HEIGHT
         sta JetAnimOffset
@@ -294,11 +327,29 @@ CheckP0Left:
 CheckP0Right:
 	lda #%10000000
         bit SWCHA
-        bne EndInputCheck
+        bne CheckButtonPressed
+        lda #JET_LEF_LIMIT
+        cmp JetXPos
+        bmi CheckButtonPressed
+.P0RightPressed:
         inc JetXPos
         lda JET_HEIGHT
         sta JetAnimOffset
-        
+
+CheckButtonPressed:
+	lda #%10000000
+	bit INPT4
+        bne EndInputCheck
+.ButtonPressed:        
+        lda JetXPos
+        clc 
+        adc #5
+        sta MissileXPos
+        clc
+        adc #8
+        lda JetYPos
+        sta MissileYPos
+
 EndInputCheck:
 
 ; Atualizar posićões para o próximo frame
@@ -310,8 +361,19 @@ UpdateBomberPosition:
         dec BomberYPos
         jmp EndPositionUpdate
 .ResetBomberPosition
-        inc Score
         jsr GetRandomBomberPos	; pegar uma posicao aleatoria para o bomber
+        
+.SetScoreValues        
+        sed
+	lda Score
+        clc
+        adc #1
+        sta Score
+        lda Timer
+        clc
+        adc #1
+        sta Timer
+        cld
 
 EndPositionUpdate:
 
