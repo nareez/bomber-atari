@@ -358,7 +358,7 @@ CheckButtonPressed:
 
 EndInputCheck:
 
-; Atualizar posićões para o próximo frame
+; Atualizar posições para o próximo frame
 UpdateBomberPosition:
 	lda BomberYPos
         clc
@@ -367,7 +367,7 @@ UpdateBomberPosition:
         dec BomberYPos
         jmp EndPositionUpdate
 .ResetBomberPosition
-        jsr GetRandomBomberPos	; pegar uma posicao aleatoria para o bomber
+        jsr GetRandomBomberPos	; pegar uma posicao aleatória para o bomber
         
 .SetTimerValues        
         sed
@@ -402,8 +402,8 @@ CheckCollisionM0P1:		;Checa a colisão do missil com o avião inimigo Bomber
         sta Score
         cld
         lda #0
-        sta MissileYPos
-        jsr GetRandomBomberPos
+        sta MissileYPos		; Some o missil
+        jsr GetRandomBomberPos	; Gera um novo bomber
         
 EndCollisionCheck:   
 	sta CXCLR
@@ -541,7 +541,7 @@ CalculateDigitOffset subroutine
 	rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Desperdica ciclos para sincronizar com o TIA
+;; Desperdica ciclos para sincronizar com o TIA (Race the Beam)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Sleep12Cycles subroutine
 	rts
