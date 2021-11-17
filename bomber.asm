@@ -35,12 +35,13 @@ RiverColor	byte
 ; Constantes
 
 JET_HEIGHT = 9
-JET_TOP_LIMIT = 75
-JET_BOT_LIMIT = 3
+JET_TOP_LIMIT = 77
+JET_BOT_LIMIT = 1
 JET_LEF_LIMIT = 101
 JET_RIG_LIMIT = 31
 BOMBER_HEIGHT = 9
 DIGITS_HEIGHT = 5
+missileSound  = $FB 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Code segment
@@ -105,13 +106,14 @@ StartFrame:
         lda #0
     	sta VSYNC                ; turn off VSYNC
 ; 37 lines of underscan
-	REPEAT 33
+	REPEAT 32
         	sta WSYNC            ; display the 37 recommended lines of VBLANK
         REPEND
         
 ; VBLANK processing
 	lda JetXPos
-        ldy #0
+  
+  ldy #0
         jsr SetObjectXPos
         
         lda BomberXPos
@@ -124,12 +126,14 @@ StartFrame:
         
         jsr CalculateDigitOffset ; calcula o offset do digito
         
+        jsr JetSound
+        
         sta WSYNC
         sta HMOVE
 
 ; Scoreboard
     
-        ;lda #0
+        lda #0
         sta PF0
         sta PF1
         sta PF2
@@ -141,7 +145,7 @@ StartFrame:
         lda #$1E
         sta COLUPF              
         
-        ldx DIGITS_HEIGHT
+        ldx #DIGITS_HEIGHT
         
         lda #0
         sta VBLANK               ; turn off VBLANK
@@ -237,7 +241,7 @@ GameVisibleLine:
 	txa
         sec
         sbc JetYPos
-        cmp JET_HEIGHT
+        cmp #JET_HEIGHT
         bcc .DrawSpriteP0
         lda #0
 
@@ -256,7 +260,7 @@ GameVisibleLine:
 	txa
         sec
         sbc BomberYPos
-        cmp BOMBER_HEIGHT
+        cmp #BOMBER_HEIGHT
         bcc .DrawSpriteP1
         lda #0
 
@@ -280,12 +284,12 @@ GameVisibleLine:
         
 ; 29 linhas do overscan
         lda #2
-        sta VBLANK               ; turn on VBLANK again
+        sta VBLANK               ; liga o VBLANK again
         REPEAT 30
-            sta WSYNC            ; display 30 recommended lines of VBlank Overscan
+            sta WSYNC            ; desenha as 30 linhas do overscan
         REPEND
         lda #0
-        sta VBLANK               ; turn off VBLANK
+        sta VBLANK               ; desliga o VBLANK
 
 ; Joystick
 CheckP0up:
@@ -321,7 +325,7 @@ CheckP0Left:
         bpl CheckP0Right
 .P0LeftPressed:
         dec JetXPos
-        lda JET_HEIGHT
+        lda #JET_HEIGHT
         sta JetAnimOffset
 
 CheckP0Right:
@@ -333,7 +337,7 @@ CheckP0Right:
         bmi CheckButtonPressed
 .P0RightPressed:
         inc JetXPos
-        lda JET_HEIGHT
+        lda #JET_HEIGHT
         sta JetAnimOffset
 
 CheckButtonPressed:
@@ -348,6 +352,8 @@ CheckButtonPressed:
         clc
         adc #8
         lda JetYPos
+        clc
+        adc #2
         sta MissileYPos
 
 EndInputCheck:
@@ -383,7 +389,7 @@ CheckCollisionP0P1:
 .P0P1Collided:
 	jsr GameOver
 
-CheckCollisionM0P1:
+CheckCollisionM0P1:		;Checa a colisão do missil com o avião inimigo Bomber
 	lda #%10000000
         bit CXM0P
         bne .M0P1Collided
@@ -396,7 +402,8 @@ CheckCollisionM0P1:
         sta Score
         cld
         lda #0
-        sta MissileYPos        
+        sta MissileYPos
+        jsr GetRandomBomberPos
         
 EndCollisionCheck:   
 	sta CXCLR
@@ -407,6 +414,27 @@ EndCollisionCheck:
 
         jmp StartFrame
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Audio do aviao e vai mudar o PITCH de acordo com a posição Y
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+JetSound:
+	lda #3
+        sta AUDV0
+        
+        lda JetYPos
+        lsr
+        lsr
+        lsr
+        sta Temp
+        lda #31
+        sec
+        sbc Temp
+        sta AUDF0
+        
+        lda #8
+        sta AUDC0
+        
+	rts
 
 SetTerrainRiverColor subroutine
 	lda #$C2
