@@ -225,9 +225,9 @@ GameVisibleLine:
         lda #0
         sta PF2
         
-        ldx #88          ; conta as scanlines remanecentes usando kernel * 2 ou seja 89 * 2 scanlines = 178 
-                         ; as 21 faltantes são desenhadas ao longo do processamento
-        
+        ldx #88          ; conta as scanlines remanecentes usando kernel * 2 ou seja 88 * 2 scanlines = 176 
+                         ; as 23 faltantes são o score acima
+                         
 .GameLineLoop:
 	lda #%00000000
         cpx MissileYPos
