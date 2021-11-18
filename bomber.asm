@@ -29,7 +29,7 @@ ScoreSprite	byte
 TimerSprite	byte
 TerrainColor	byte
 RiverColor	byte
- 
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Constantes
@@ -70,6 +70,9 @@ Reset:
         lda #0
         sta Score
         sta Timer
+
+        lda #%00010000          ;seta o missile0 no tamanho 2x
+        sta NUSIZ0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Inicializar ponteiros
@@ -122,11 +125,11 @@ StartFrame:
         lda MissileXPos
         ldy #2
         jsr SetObjectXPos
-        
+
         jsr CalculateDigitOffset ; calcula o offset do digito
         
         jsr JetSound
-        
+
         sta WSYNC
         sta HMOVE
         
@@ -225,9 +228,9 @@ GameVisibleLine:
         lda #0
         sta PF2
         
-        ldx #88          ; conta as scanlines remanecentes usando kernel * 2 ou seja 88 * 2 scanlines = 176 
-                         ; as 23 faltantes são o score acima
-                         
+        ldx #88          ; conta as scanlines remanecentes usando kernel * 2 ou seja 89 * 2 scanlines = 178 
+                         ; as 21 faltantes são desenhadas ao longo do processamento
+        
 .GameLineLoop:
 	lda #%00000000
         cpx MissileYPos
