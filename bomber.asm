@@ -29,7 +29,7 @@ ScoreSprite	byte
 TimerSprite	byte
 TerrainColor	byte
 RiverColor	byte
-
+ 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Constantes
