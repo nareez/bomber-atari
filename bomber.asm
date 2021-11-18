@@ -286,7 +286,7 @@ GameVisibleLine:
         
 ; 30 linhas do overscan
         lda #2
-        sta VBLANK               ; liga o VBLANK again
+        sta VBLANK               ; liga o VBLANK de novo para o overscan
         REPEAT 26
             sta WSYNC            ; desenha as 26 linhas do overscan as 4 faltantes é o processamento de colisão abaixo
         REPEND
