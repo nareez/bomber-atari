@@ -41,7 +41,6 @@ JET_LEF_LIMIT = 101
 JET_RIG_LIMIT = 31
 BOMBER_HEIGHT = 9
 DIGITS_HEIGHT = 5
-missileSound  = $FB 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Code segment
@@ -98,22 +97,22 @@ StartFrame:
 
 ; 1 + 3 lines of VSYNC
 	lda #2
-        sta VBLANK               ; turn on VBLANK
-        sta VSYNC                ; turn on VSYNC
+        sta VBLANK               ; liga o VBLANK
+        sta VSYNC                ; liga o VSYNC
         REPEAT 3
-            sta WSYNC            ; display 3 recommended lines of VSYNC
+            sta WSYNC            ; aguarda as 3 linhas do VSYNC
         REPEND
         lda #0
-    	sta VSYNC                ; turn off VSYNC
+    	sta VSYNC                ; desliga o VSYNC
 ; 37 lines of underscan
-	REPEAT 32
-        	sta WSYNC            ; display the 37 recommended lines of VBLANK
+	REPEAT 34
+        	sta WSYNC            ; mostra 34 linhas do VBLANK o resto são os ciclos do processamento abaixo até completar 37
         REPEND
         
 ; VBLANK processing
 	lda JetXPos
   
-  ldy #0
+        ldy #0
         jsr SetObjectXPos
         
         lda BomberXPos
@@ -130,10 +129,14 @@ StartFrame:
         
         sta WSYNC
         sta HMOVE
+        
+        lda #0
+        sta VBLANK               ; turn off VBLANK
 
 ; Scoreboard
     
         lda #0
+        sta COLUBK
         sta PF0
         sta PF1
         sta PF2
@@ -146,11 +149,7 @@ StartFrame:
         sta COLUPF              
         
         ldx #DIGITS_HEIGHT
-        
-        lda #0
-        sta VBLANK               ; turn off VBLANK
-        
-        
+
 .ScoreDigitLoop:
 ; Score
 	ldy TensDigitOffset
@@ -206,6 +205,7 @@ StartFrame:
         sta WSYNC
         sta WSYNC
         sta WSYNC
+        sta WSYNC
 
 GameVisibleLine:
 	lda TerrainColor
@@ -225,7 +225,8 @@ GameVisibleLine:
         lda #0
         sta PF2
         
-        ldx #85          ; conta as scanlines remanecentes
+        ldx #88          ; conta as scanlines remanecentes usando kernel * 2 ou seja 89 * 2 scanlines = 178 
+                         ; as 21 faltantes são desenhadas ao longo do processamento
         
 .GameLineLoop:
 	lda #%00000000
@@ -247,7 +248,7 @@ GameVisibleLine:
 
 .DrawSpriteP0:
 	clc
-	adc JetAnimOffset	;pular para o frame correto para gerar uma animacao de curva
+	adc JetAnimOffset	;pular para o frame correto para gerar a animação de curva
         
 	tay
         lda (JetSpritePtr),Y
@@ -281,12 +282,13 @@ GameVisibleLine:
         
 	lda #0
         sta JetAnimOffset
+        sta WSYNC
         
-; 29 linhas do overscan
+; 30 linhas do overscan
         lda #2
         sta VBLANK               ; liga o VBLANK again
-        REPEAT 30
-            sta WSYNC            ; desenha as 30 linhas do overscan
+        REPEAT 26
+            sta WSYNC            ; desenha as 26 linhas do overscan as 4 faltantes é o processamento de colisão abaixo
         REPEND
         lda #0
         sta VBLANK               ; desliga o VBLANK
