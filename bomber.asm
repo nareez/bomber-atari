@@ -684,26 +684,26 @@ BomberSprite:
     .byte #%00011100         ;   ###
 
 JetColor:
-    .byte #$00
-    .byte #$FE
-    .byte #$0C
-    .byte #$0E
-    .byte #$0E
-    .byte #$04
-    .byte #$BA
-    .byte #$0E
-    .byte #$08
-
+    .byte #$34;
+    .byte #$34;
+    .byte #$02;
+    .byte #$02;
+    .byte #$C8;
+    .byte #$1C;
+    .byte #$04;
+    .byte #$06;
+    .byte #$0A;
+    
 JetColorTurn:
-    .byte #$00
-    .byte #$FE
-    .byte #$0C
-    .byte #$0E
-    .byte #$0E
-    .byte #$04
-    .byte #$0E
-    .byte #$0E
-    .byte #$08
+    .byte #$34;
+    .byte #$34;
+    .byte #$02;
+    .byte #$02;
+    .byte #$C8;
+    .byte #$1C;
+    .byte #$04;
+    .byte #$06;
+    .byte #$0A;
 
 BomberColor:
     .byte #$00
