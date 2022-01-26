@@ -4,7 +4,7 @@ Atari 2600 VCS game made as final project of the course: <a href="https://www.ud
 Some improvements from original project were made:
 - Bomber disapear when get shoted
 - Increased the size of Missile
-- Corrected the CPU cycles and the scanline count to sync perfect to run on a real hardware
+- Corrected the CPU cycles and the scanline count to sync perfect and run on a real hardware
 
 #### Good references used in this project
 - IDE - <a href="8bitworkshop.com">8bitworkshop</a> - nice IDE to program for atari
