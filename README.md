@@ -12,3 +12,7 @@ Some improvements from original project were made:
 - Emulator - <a href="https://stella-emu.github.io/">Stella</a> emulator for general emulation and debugging 
 - Emulator - <a href="https://github.com/JetSetIlly/Gopher2600">Gopher2600</a> emulator is the best for sync scanlines and CPU cycles
 - Tool - <a href="https://alienbill.com/2600/playerpalnext.html">playerpal 2600</a> - Sprite Maker for Atari VCS
+
+#### Screenshot
+
+![Game](Bomber%20Atari.png)
